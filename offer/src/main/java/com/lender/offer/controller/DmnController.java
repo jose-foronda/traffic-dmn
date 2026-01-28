@@ -31,9 +31,11 @@ public class DmnController {
     }
 
     @PostMapping("/test-scesim")
-    public ResponseEntity<?> testScesimFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> testScesimFile(
+            @RequestParam("scesimFile") MultipartFile scesimFile,
+            @RequestParam("dmnFile") MultipartFile dmnFile) {
         try {
-            var result = scesimTestService.runScesimTest(file);
+            var result = scesimTestService.runScesimTest(scesimFile, dmnFile);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid file: " + e.getMessage());
