@@ -42,11 +42,9 @@ public class DmnValidationService {
         
         KieServices kieServices = KieServices.Factory.get();
         KieFileSystem kfs = kieServices.newKieFileSystem();
-        kfs.write("src/main/resources/" + filename, fileBytes);
+        kfs.write(resource);
         
-        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs);
-        kieBuilder.buildAll();
-        
+        KieBuilder kieBuilder = kieServices.newKieBuilder(kfs).buildAll();
         KieContainer kieContainer = kieServices.newKieContainer(kieBuilder.getKieModule().getReleaseId());
         DMNRuntime runtime = kieContainer.newKieSession().getKieRuntime(DMNRuntime.class);
         
