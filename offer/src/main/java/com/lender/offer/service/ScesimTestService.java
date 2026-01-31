@@ -1,19 +1,17 @@
 package com.lender.offer.service;
 
-import org.drools.scenariosimulation.api.model.ScenarioSimulationModel;
+import org.drools.scenariosimulation.api.model.*;
 import org.drools.scenariosimulation.backend.util.ScenarioSimulationXMLPersistence;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
 import org.kie.api.builder.Message;
 import org.kie.api.runtime.KieContainer;
-import org.kie.dmn.api.core.DMNRuntime;
+import org.kie.dmn.api.core.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ScesimTestService {
@@ -43,7 +41,6 @@ public class ScesimTestService {
             KieFileSystem kfs = kieServices.newKieFileSystem();
             
             kfs.write("src/main/resources/" + dmnFilename, dmnFile.getBytes());
-            kfs.write("src/test/resources/" + scesimFilename, scesimFile.getBytes());
             
             KieBuilder kieBuilder = kieServices.newKieBuilder(kfs).buildAll();
             
@@ -52,16 +49,76 @@ public class ScesimTestService {
             }
             
             KieContainer kieContainer = kieServices.newKieContainer(kieBuilder.getKieModule().getReleaseId());
+            DMNRuntime dmnRuntime = kieContainer.newKieSession().getKieRuntime(DMNRuntime.class);
             
             String scesimContent = new String(scesimFile.getBytes());
             ScenarioSimulationModel model = ScenarioSimulationXMLPersistence.getInstance().unmarshal(scesimContent);
             
-            result.put("testPassed", true);
-            result.put("totalScenarios", model.getSimulation().getScenarioWithIndex().size());
-            result.put("failedScenarios", 0);
+            List<DMNModel> dmnModels = dmnRuntime.getModels();
+            if (dmnModels.isEmpty()) {
+                throw new RuntimeException("No DMN model found");
+            }
+            DMNModel dmnModel = dmnModels.get(0);
+            
+            int totalScenarios = 0;
+            int failedScenarios = 0;
+            List<Map<String, Object>> scenarioResults = new ArrayList<>();
+            
+            Simulation simulation = model.getSimulation();
+            for (ScenarioWithIndex scenarioWithIndex : simulation.getScenarioWithIndex()) {
+                totalScenarios++;
+                Scenario scenario = scenarioWithIndex.getScesimData();
+                
+                try {
+                    DMNContext context = dmnRuntime.newContext();
+                    
+                    for (FactMappingValue factMappingValue : scenario.getUnmodifiableFactMappingValues()) {
+                        FactIdentifier factIdentifier = factMappingValue.getFactIdentifier();
+                        ExpressionIdentifier expressionIdentifier = factMappingValue.getExpressionIdentifier();
+                        
+                        if (!factIdentifier.equals(FactIdentifier.EMPTY) && 
+                            !factIdentifier.equals(FactIdentifier.INDEX)) {
+                            String name = expressionIdentifier.getName();
+                            Object value = factMappingValue.getRawValue();
+                            
+                            if (name != null && !name.isEmpty() && value != null) {
+                                context.set(name, value);
+                            }
+                        }
+                    }
+                    
+                    DMNResult dmnResult = dmnRuntime.evaluateAll(dmnModel, context);
+                    
+                    boolean scenarioPassed = !dmnResult.hasErrors();
+                    Map<String, Object> scenarioResult = new HashMap<>();
+                    scenarioResult.put("index", scenarioWithIndex.getIndex());
+                    scenarioResult.put("passed", scenarioPassed);
+                    
+                    if (!scenarioPassed) {
+                        failedScenarios++;
+                        scenarioResult.put("errors", dmnResult.getMessages().toString());
+                    }
+                    
+                    scenarioResults.add(scenarioResult);
+                    
+                } catch (Exception e) {
+                    failedScenarios++;
+                    Map<String, Object> scenarioResult = new HashMap<>();
+                    scenarioResult.put("index", scenarioWithIndex.getIndex());
+                    scenarioResult.put("passed", false);
+                    scenarioResult.put("error", e.getMessage());
+                    scenarioResults.add(scenarioResult);
+                }
+            }
+            
+            result.put("testPassed", failedScenarios == 0);
+            result.put("totalScenarios", totalScenarios);
+            result.put("failedScenarios", failedScenarios);
+            result.put("passedScenarios", totalScenarios - failedScenarios);
             result.put("scesimFile", scesimFilename);
             result.put("dmnFile", dmnFilename);
-            result.put("message", "SCESIM loaded successfully with DMN model");
+            result.put("scenarioResults", scenarioResults);
+            result.put("message", "SCESIM executed: " + (totalScenarios - failedScenarios) + "/" + totalScenarios + " passed");
             
         } catch (Exception e) {
             result.put("testPassed", false);
