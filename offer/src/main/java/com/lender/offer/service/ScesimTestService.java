@@ -105,6 +105,7 @@ public class ScesimTestService {
                     boolean scenarioPassed = !dmnResult.hasErrors();
                     Map<String, Object> scenarioResult = new HashMap<>();
                     scenarioResult.put("index", scenarioWithIndex.getIndex());
+                    scenarioResult.put("name", scenario.getDescription());
                     scenarioResult.put("passed", scenarioPassed);
                     
                     if (!scenarioPassed) {
@@ -118,6 +119,7 @@ public class ScesimTestService {
                     failedScenarios++;
                     Map<String, Object> scenarioResult = new HashMap<>();
                     scenarioResult.put("index", scenarioWithIndex.getIndex());
+                    scenarioResult.put("name", scenario.getDescription());
                     scenarioResult.put("passed", false);
                     scenarioResult.put("error", e.getMessage());
                     scenarioResults.add(scenarioResult);
