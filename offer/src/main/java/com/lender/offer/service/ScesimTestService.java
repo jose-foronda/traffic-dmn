@@ -71,20 +71,33 @@ public class ScesimTestService {
                 
                 try {
                     DMNContext context = dmnRuntime.newContext();
+                    Map<String, Object> inputsByName = new HashMap<>();
                     
                     for (FactMappingValue factMappingValue : scenario.getUnmodifiableFactMappingValues()) {
                         FactIdentifier factIdentifier = factMappingValue.getFactIdentifier();
                         ExpressionIdentifier expressionIdentifier = factMappingValue.getExpressionIdentifier();
                         
                         if (!factIdentifier.equals(FactIdentifier.EMPTY) && 
-                            !factIdentifier.equals(FactIdentifier.INDEX)) {
-                            String name = expressionIdentifier.getName();
+                            !factIdentifier.equals(FactIdentifier.INDEX) &&
+                            !factIdentifier.equals(FactIdentifier.DESCRIPTION)) {
+                            
+                            String factName = factIdentifier.getName();
+                            String propertyName = expressionIdentifier.getName();
                             Object value = factMappingValue.getRawValue();
                             
-                            if (name != null && !name.isEmpty() && value != null) {
-                                context.set(name, value);
+                            if (factName != null && !factName.isEmpty() && value != null) {
+                                if (propertyName != null && !propertyName.isEmpty() && !propertyName.equals(factName)) {
+                                    Map<String, Object> factObject = (Map<String, Object>) inputsByName.computeIfAbsent(factName, k -> new HashMap<>());
+                                    factObject.put(propertyName, value);
+                                } else {
+                                    inputsByName.put(factName, value);
+                                }
                             }
                         }
+                    }
+                    
+                    for (Map.Entry<String, Object> entry : inputsByName.entrySet()) {
+                        context.set(entry.getKey(), entry.getValue());
                     }
                     
                     DMNResult dmnResult = dmnRuntime.evaluateAll(dmnModel, context);
