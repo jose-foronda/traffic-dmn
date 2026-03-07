@@ -3,16 +3,17 @@ package com.lender.offer.service;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieBuilder;
 import org.kie.api.builder.KieFileSystem;
+import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
 import org.kie.dmn.api.core.DMNMessage;
 import org.kie.dmn.api.core.DMNModel;
 import org.kie.dmn.api.core.DMNRuntime;
 import org.kie.dmn.validation.DMNValidator;
 import org.kie.dmn.validation.DMNValidatorFactory;
+import org.kie.internal.io.ResourceFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public class DmnValidationService {
         
         byte[] fileBytes = file.getBytes();
         
-        org.kie.api.io.Resource resource = org.kie.internal.io.ResourceFactory.newByteArrayResource(fileBytes);
+        Resource resource = ResourceFactory.newByteArrayResource(fileBytes);
         resource.setSourcePath(filename);
         
         DMNValidator validator = DMNValidatorFactory.newValidator();
