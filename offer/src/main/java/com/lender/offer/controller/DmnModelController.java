@@ -1,6 +1,7 @@
 package com.lender.offer.controller;
 
 import com.lender.offer.model.DmnModel;
+import com.lender.offer.service.DmnEvaluationService;
 import com.lender.offer.service.DmnModelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -8,12 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dmn-models")
 @RequiredArgsConstructor
 public class DmnModelController {
     private final DmnModelService service;
+    private final DmnEvaluationService evaluationService;
 
     @PostMapping("/upload")
     public ResponseEntity<DmnModel> uploadDmnFile(
@@ -31,6 +34,20 @@ public class DmnModelController {
             model.setCreatedBy(createdBy);
             
             return ResponseEntity.ok(service.save(model));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/{dmnModelId}/evaluate")
+    public ResponseEntity<Map<String, Object>> evaluate(
+            @PathVariable Long dmnModelId,
+            @RequestBody Map<String, Object> context) {
+        try {
+            Map<String, Object> result = evaluationService.evaluate(dmnModelId, context);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

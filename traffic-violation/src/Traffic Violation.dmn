@@ -58,12 +58,12 @@
     </dmn:informationRequirement>
     <dmn:decisionTable id="_C8F7F579-E06C-4A2F-8485-65FAFAC3FE6A" hitPolicy="UNIQUE" preferredOrientation="Rule-as-Row">
       <dmn:input id="_B53A6F0D-F72C-41EF-96B3-F31269AC0FED">
-        <dmn:inputExpression id="_974C8D01-728F-4CE5-8C69-BE884125B859" typeRef="string">
+        <dmn:inputExpression id="_E34ED02B-17C2-49EB-93FE-FF27EEBE9DBD" typeRef="string">
           <dmn:text>Violation.Type</dmn:text>
         </dmn:inputExpression>
       </dmn:input>
       <dmn:input id="_D5319F80-1C59-4736-AF2D-D29DE6B7E76D">
-        <dmn:inputExpression id="_3FEB4DE3-90C6-438E-99BF-9BB1BF5B078A" typeRef="number">
+        <dmn:inputExpression id="_77BFED45-14C8-4474-92AE-1BE307A89199" typeRef="number">
           <dmn:text>Violation.Actual Speed - Violation.Speed Limit</dmn:text>
         </dmn:inputExpression>
       </dmn:input>
@@ -81,7 +81,7 @@
           <dmn:text>500</dmn:text>
         </dmn:outputEntry>
         <dmn:outputEntry id="_1D56F3CB-6BAE-4415-940F-00F37121813D">
-          <dmn:text>3</dmn:text>
+          <dmn:text>2</dmn:text>
         </dmn:outputEntry>
         <dmn:annotationEntry>
           <dmn:text/>
